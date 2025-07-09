@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.aichat.mapper.AiAgentMapper">
+
+    <select id="selectAvailableAgents" resultType="com.example.aichat.entity.AiAgent">
+        SELECT * FROM ai_agent WHERE status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByName" resultType="com.example.aichat.entity.AiAgent">
+        SELECT * FROM ai_agent WHERE name = #{name} AND status = 1
+    </select>
+
+</mapper>

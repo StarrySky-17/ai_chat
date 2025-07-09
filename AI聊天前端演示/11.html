@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI聊天系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#10B981',
+            neutral: '#1F2937',
+            'neutral-light': '#F3F4F6',
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+    }
+    .page {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .page.active {
+      display: block;
+      opacity: 1;
+    }
+    .user-avatar {
+      background: linear-gradient(135deg, #4F46E5, #10B981);
+    }
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .setting-card {
+      transition: all 0.2s ease;
+    }
+    .setting-card:hover {
+      background-color: #f9fafb;
+      transform: translateX(5px);
+    }
+  </style>
+</head>
+<body class="font-inter bg-gray-50 min-h-screen flex flex-col text-neutral">
+<!-- 登录页面 -->
+<div id="login-page" class="page active flex flex-col items-center justify-center min-h-screen p-4">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-primary p-8 text-center">
+      <h1 class="text-3xl font-bold text-white flex items-center justify-center">
+        <i class="fa fa-comments-o mr-3"></i>AI载船星梦聊天系统
+      </h1>
+      <p class="text-white/80 mt-2">智能对话，无限可能</p>
+    </div>
+
+    <div class="p-8">
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-medium mb-2" for="username">用户名</label>
+        <input id="username" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="请输入用户名">
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-medium mb-2" for="password">密码</label>
+        <input id="password" type="password" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="请输入密码">
+      </div>
+
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+          <input id="remember" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+          <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+        </div>
+        <a href="#" class="text-sm text-primary hover:underline">忘记密码?</a>
+      </div>
+
+      <button id="login-btn" class="w-full bg-primary text-white py-3 px-4 rounded-lg flex items-center justify-center hover:bg-primary/90 transition-colors font-medium">
+        登录
+      </button>
+
+      <div class="mt-6 text-center">
+        <p class="text-gray-600 text-sm">其他登录方式</p>
+        <div class="flex justify-center space-x-4 mt-3">
+          <button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+            <i class="fa fa-mobile text-gray-700"></i>
+          </button>
+          <button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+            <i class="fa fa-wechat text-green-500"></i>
+          </button>
+          <button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+            <i class="fa fa-qq text-blue-500"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-gray-200 flex justify-center">
+        <p class="text-gray-600 text-sm">还没有账号?
+          <a href="#" class="text-primary hover:underline">立即注册</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 grid grid-cols-3 gap-4 w-full max-w-md">
+    <button class="bg-gray-100 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+      演示账号
+    </button>
+    <button class="bg-gray-100 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+      管理员账号
+    </button>
+    <button class="bg-gray-100 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+      普通用户
+    </button>
+  </div>
+</div>
+
+<!-- 主聊天页面 -->
+<div id="main-page" class="page h-screen flex overflow-hidden">
+  <!-- 侧边栏 -->
+  <div class="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div class="p-4 border-b border-gray-200 flex items-center">
+      <div class="mr-3">
+        <div class="w-10 h-10 user-avatar rounded-full flex items-center justify-center text-white">
+          <i class="fa fa-user"></i>
+        </div>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-primary">AI聊天系统</h1>
+        <p class="text-xs text-gray-500">欢迎回来，<span id="username-display">用户</span></p>
+      </div>
+    </div>
+
+    <div class="p-3 border-b border-gray-200">
+      <button id="new-chat-btn" class="w-full bg-primary text-white py-2 px-4 rounded-lg flex items-center justify-center hover:bg-primary/90 transition-colors">
+        <i class="fa fa-plus mr-2"></i>新建对话
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto scrollbar-hide p-2" id="chat-list">
+      <!-- 对话列表项 -->
+      <div class="chat-item p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors mb-1 active">
+        <div class="flex justify-between items-center">
+          <h3 class="font-medium">日常聊天</h3>
+          <button class="delete-chat text-gray-400 hover:text-red-500"><i class="fa fa-times"></i></button>
+        </div>
+        <p class="text-sm text-gray-500 truncate">你好，有什么可以帮助你的？</p>
+      </div>
+      <div class="chat-item p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors mb-1">
+        <div class="flex justify-between items-center">
+          <h3 class="font-medium">技术问题</h3>
+          <button class="delete-chat text-gray-400 hover:text-red-500"><i class="fa fa-times"></i></button>
+        </div>
+        <p class="text-sm text-gray-500 truncate">如何实现流式响应？</p>
+      </div>
+      <div class="chat-item p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors mb-1">
+        <div class="flex justify-between items-center">
+          <h3 class="font-medium">创意写作</h3>
+          <button class="delete-chat text-gray-400 hover:text-red-500"><i class="fa fa-times"></i></button>
+        </div>
+        <p class="text-sm text-gray-500 truncate">写一首关于春天的诗</p>
+      </div>
+    </div>
+
+    <!-- 用户信息区域 -->
+    <div class="p-3 border-t border-gray-200">
+      <button id="user-menu-btn" class="w-full flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors">
+        <div class="w-8 h-8 user-avatar rounded-full flex items-center justify-center text-white mr-3">
+          <i class="fa fa-user"></i>
+        </div>
+        <div class="text-left flex-1">
+          <p class="text-sm font-medium text-gray-900">用户昵称</p>
+          <p class="text-xs text-gray-500">账户设置</p>
+        </div>
+        <i class="fa fa-chevron-right text-gray-400"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 主聊天区域 -->
+  <div class="flex-1 flex flex-col h-full">
+    <!-- 聊天窗口 -->
+    <div class="flex-1 overflow-y-auto p-6 bg-gray-50" id="chat-messages">
+      <!-- 系统消息 -->
+      <div class="text-center mb-6">
+        <span class="bg-gray-200 text-gray-600 text-xs py-1 px-3 rounded-full">今天 14:30</span>
+      </div>
+
+      <!-- 用户消息 -->
+      <div class="flex mb-4">
+        <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3">
+          <i class="fa fa-user text-gray-600"></i>
+        </div>
+        <div class="max-w-[70%] bg-white p-3 rounded-lg rounded-tl-none shadow-sm">
+          <p>你好，有什么可以帮助我的吗？</p>
+        </div>
+      </div>
+
+      <!-- AI消息 -->
+      <div class="flex mb-4 justify-end">
+        <div class="max-w-[70%] bg-primary text-white p-3 rounded-lg rounded-tr-none shadow-sm">
+          <p>你好！我是AI助手，很高兴为你服务。请问有什么我可以帮助你的吗？</p>
+        </div>
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ml-3">
+          <i class="fa fa-robot"></i>
+        </div>
+      </div>
+
+      <!-- 用户消息 -->
+      <div class="flex mb-4">
+        <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3">
+          <i class="fa fa-user text-gray-600"></i>
+        </div>
+        <div class="max-w-[70%] bg-white p-3 rounded-lg rounded-tl-none shadow-sm">
+          <p>什么是人工智能？</p>
+        </div>
+      </div>
+
+      <!-- AI消息 -->
+      <div class="flex mb-4 justify-end">
+        <div class="max-w-[70%] bg-primary text-white p-3 rounded-lg rounded-tr-none shadow-sm">
+          <p>人工智能（AI）是计算机科学的一个分支，旨在创建能够模拟人类智能的系统。这些系统可以学习、推理、解决问题、理解自然语言、识别模式和做出决策。</p>
+          <p class="mt-2">AI的应用非常广泛，包括语音识别、图像识别、自然语言处理、机器学习、深度学习等领域。从虚拟助手到自动驾驶汽车，AI正在改变我们的生活和工作方式。</p>
+        </div>
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ml-3">
+          <i class="fa fa-robot"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷提问 -->
+    <div class="p-4 border-t border-gray-200 bg-white">
+      <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <button class="quick-question whitespace-nowrap px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+          什么是机器学习？
+        </button>
+        <button class="quick-question whitespace-nowrap px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+          如何学习编程？
+        </button>
+        <button class="quick-question whitespace-nowrap px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+          推荐一本好书
+        </button>
+        <button class="quick-question whitespace-nowrap px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+          今天天气怎么样？
+        </button>
+      </div>
+    </div>
+
+    <!-- 输入区域 -->
+    <div class="p-4 border-t border-gray-200 bg-white">
+      <div class="flex items-end gap-2">
+        <textarea id="message-input" rows="1" placeholder="请输入消息..." class="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none transition-all"></textarea>
+        <button id="send-btn" class="bg-primary text-white p-3 rounded-lg hover:bg-primary/90 transition-colors">
+          <i class="fa fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 账户设置页面 -->
+<div id="account-page" class="page min-h-screen bg-gray-100 p-4 md:p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- 顶部用户信息 -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+      <div class="flex items-center">
+        <div class="relative">
+          <div class="w-20 h-20 user-avatar rounded-xl flex items-center justify-center text-white text-2xl">
+            <i class="fa fa-user"></i>
+          </div>
+          <button class="absolute bottom-0 right-0 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-md">
+            <i class="fa fa-camera text-gray-600"></i>
+          </button>
+        </div>
+
+        <div class="ml-6">
+          <h1 class="text-2xl font-bold text-gray-900">载一船星梦</h1>
+          <p class="text-gray-600 mt-1">高级会员 · 注册于2025年7月5号</p>
+          <div class="flex mt-3">
+            <span class="bg-gray-100 text-gray-800 text-xs py-1 px-3 rounded-full mr-2">AI专家</span>
+            <span class="bg-gray-100 text-gray-800 text-xs py-1 px-3 rounded-full">技术达人</span>
+          </div>
+        </div>
+
+        <div class="ml-auto">
+          <button id="edit-profile-btn" class="bg-primary text-white py-2 px-6 rounded-lg hover:bg-primary/90 transition-colors flex items-center">
+            <i class="fa fa-edit mr-2"></i>编辑资料
+          </button>
+        </div>
+      </div>
+
+      <!-- 用户统计卡片 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        <div class="stat-card bg-white border border-gray-200 rounded-xl p-5 text-center hover:border-primary">
+          <p class="text-3xl font-bold text-primary">28</p>
+          <p class="text-gray-600 mt-1">浏览数量</p>
+        </div>
+        <div class="stat-card bg-white border border-gray-200 rounded-xl p-5 text-center hover:border-primary">
+          <p class="text-3xl font-bold text-primary">18</p>
+          <p class="text-gray-600 mt-1">消息总数</p>
+        </div>
+        <div class="stat-card bg-white border border-gray-200 rounded-xl p-5 text-center hover:border-primary">
+          <p class="text-3xl font-bold text-primary">30</p>
+          <p class="text-gray-600 mt-1">使用天数</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置选项 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- 账户设置 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fa fa-user-circle text-primary mr-2"></i>账户设置
+        </h2>
+
+        <div class="space-y-3">
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-user text-gray-500 mr-3"></i>
+              <span>编辑资料</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-lock text-gray-500 mr-3"></i>
+              <span>修改密码</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-shield text-gray-500 mr-3"></i>
+              <span>隐私设置</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 关于应用 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fa fa-info-circle text-primary mr-2"></i>关于应用
+        </h2>
+
+        <div class="space-y-3">
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-code-fork text-gray-500 mr-3"></i>
+              <span>版本信息 v1.0.0</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-question-circle text-gray-500 mr-3"></i>
+              <span>使用帮助</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-gavel text-gray-500 mr-3"></i>
+              <span>服务条款</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 对话管理 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fa fa-comments text-primary mr-2"></i>对话管理
+        </h2>
+
+        <div class="space-y-3">
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-download text-gray-500 mr-3"></i>
+              <span>导出对话</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+
+          <button class="setting-card w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center">
+              <i class="fa fa-trash text-gray-500 mr-3"></i>
+              <span>清空对话</span>
+            </div>
+            <i class="fa fa-chevron-right text-gray-400"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 系统设置 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fa fa-cog text-primary mr-2"></i>系统设置
+        </h2>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="fa fa-moon text-gray-500 mr-3"></i>
+              <span>深色模式</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="fa fa-bell text-gray-500 mr-3"></i>
+              <span>消息提示音</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="fa fa-language text-gray-500 mr-3"></i>
+              <span>多语言支持</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部操作按钮 -->
+    <div class="mt-8 flex justify-between">
+      <button id="back-to-chat-btn" class="bg-gray-200 text-gray-800 py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors flex items-center">
+        <i class="fa fa-arrow-left mr-2"></i>返回聊天
+      </button>
+      <button id="logout-btn" class="bg-red-100 text-red-600 py-3 px-8 rounded-lg hover:bg-red-200 transition-colors flex items-center">
+        <i class="fa fa-sign-out mr-2"></i>退出登录
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 用户资料编辑页面 -->
+<div id="profile-page" class="page min-h-screen bg-gray-100 p-4 md:p-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">编辑资料</h1>
+        <button id="back-to-account-btn" class="text-gray-500 hover:text-gray-700">
+          <i class="fa fa-close text-xl"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="stat-card bg-primary/10 border border-primary/20 rounded-xl p-5 text-center">
+          <p class="text-3xl font-bold text-primary">28</p>
+          <p class="text-gray-600 mt-1">浏览数量</p>
+        </div>
+        <div class="stat-card bg-primary/10 border border-primary/20 rounded-xl p-5 text-center">
+          <p class="text-3xl font-bold text-primary">18</p>
+          <p class="text-gray-600 mt-1">消息总数</p>
+        </div>
+        <div class="stat-card bg-primary/10 border border-primary/20 rounded-xl p-5 text-center">
+          <p class="text-3xl font-bold text-primary">30</p>
+          <p class="text-gray-600 mt-1">使用天数</p>
+        </div>
+      </div>
+
+      <form class="space-y-6">
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-2" for="nickname">昵称</label>
+          <input id="nickname" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="请输入昵称" value="用户昵称">
+        </div>
+
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-2" for="email">邮箱</label>
+          <input id="email" type="email" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="请输入邮箱" value="user@example.com">
+        </div>
+
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-2" for="bio">个人简介</label>
+          <textarea id="bio" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" placeholder="介绍一下你自己...">AI技术爱好者，喜欢探索新技术，对人工智能充满热情。</textarea>
+        </div>
+
+        <div>
+          <label class="block text-gray-700 text-sm font-medium mb-2">头像</label>
+          <div class="flex items-center">
+            <div class="relative mr-4">
+              <div class="w-16 h-16 user-avatar rounded-lg flex items-center justify-center text-white text-xl">
+                <i class="fa fa-user"></i>
+              </div>
+              <button class="absolute -bottom-2 -right-2 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-md">
+                <i class="fa fa-camera text-gray-600"></i>
+              </button>
+            </div>
+            <button class="border border-gray-300 rounded-lg px-4 py-2 text-sm hover:bg-gray-50">上传新头像</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="mt-10 flex justify-end space-x-3">
+        <button id="cancel-edit-btn" class="bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors">
+          取消
+        </button>
+        <button id="save-profile-btn" class="bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors">
+          保存更改
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">账户安全</h2>
+
+      <div class="space-y-4">
+        <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+          <div>
+            <h3 class="font-medium">登录密码</h3>
+            <p class="text-sm text-gray-500 mt-1">定期更改密码以确保账户安全</p>
+          </div>
+          <button class="text-primary hover:text-primary/80">修改密码</button>
+        </div>
+
+        <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+          <div>
+            <h3 class="font-medium">双重认证</h3>
+            <p class="text-sm text-gray-500 mt-1">为您的账户增加额外安全层</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
+        <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+          <div>
+            <h3 class="font-medium">登录设备</h3>
+            <p class="text-sm text-gray-500 mt-1">查看最近登录的设备</p>
+          </div>
+          <button class="text-primary hover:text-primary/80">查看详情</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 页面切换功能
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active');
+    });
+    document.getElementById(pageId).classList.add('active');
+  }
+
+  // 登录功能
+  document.getElementById('login-btn').addEventListener('click', function() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if (username && password) {
+      document.getElementById('username-display').textContent = username;
+      showPage('main-page');
+    } else {
+      alert('请输入用户名和密码！');
+    }
+  });
+
+  // 用户菜单功能
+  document.getElementById('user-menu-btn').addEventListener('click', function() {
+    showPage('account-page');
+  });
+
+  // 返回聊天功能
+  document.getElementById('back-to-chat-btn').addEventListener('click', function() {
+    showPage('main-page');
+  });
+
+  // 编辑资料功能
+  document.getElementById('edit-profile-btn').addEventListener('click', function() {
+    showPage('profile-page');
+  });
+
+  // 返回账户设置功能
+  document.getElementById('back-to-account-btn').addEventListener('click', function() {
+    showPage('account-page');
+  });
+
+  // 退出登录功能
+  document.getElementById('logout-btn').addEventListener('click', function() {
+    if (confirm('确定要退出登录吗？')) {
+      showPage('login-page');
+    }
+  });
+
+  // 保存资料功能
+  document.getElementById('save-profile-btn').addEventListener('click', function() {
+    const nickname = document.getElementById('nickname').value;
+    if (nickname) {
+      alert('资料保存成功！');
+      showPage('account-page');
+    } else {
+      alert('昵称不能为空！');
+    }
+  });
+
+  // 取消编辑功能
+  document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+    if (confirm('确定要放弃更改吗？')) {
+      showPage('account-page');
+    }
+  });
+
+  // 以下是原聊天功能代码
+  document.addEventListener('DOMContentLoaded', function() {
+    // 获取DOM元素
+    const newChatBtn = document.getElementById('new-chat-btn');
+    const chatList = document.getElementById('chat-list');
+    const deleteChatBtns = document.querySelectorAll('.delete-chat');
+    const quickQuestions = document.querySelectorAll('.quick-question');
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chatMessages = document.getElementById('chat-messages');
+
+    // 自动调整输入框高度
+    messageInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+      if (this.scrollHeight > 120) {
+        this.style.height = '120px';
+        this.style.overflowY = 'auto';
+      } else {
+        this.style.overflowY = 'hidden';
+      }
+    });
+
+    // 新建对话
+    newChatBtn.addEventListener('click', function() {
+      const newChat = document.createElement('div');
+      newChat.className = 'chat-item p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors mb-1 active';
+      newChat.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-medium">新对话</h3>
+                        <button class="delete-chat text-gray-400 hover:text-red-500"><i class="fa fa-times"></i></button>
+                    </div>
+                    <p class="text-sm text-gray-500 truncate">开始新的聊天...</p>
+                `;
+
+      // 移除其他对话的active状态
+      document.querySelectorAll('.chat-item').forEach(item => {
+        item.classList.remove('active', 'bg-gray-100');
+      });
+
+      // 添加新对话到列表
+      chatList.prepend(newChat);
+
+      // 为新对话的删除按钮添加事件
+      newChat.querySelector('.delete-chat').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (confirm('确定要删除这个对话吗？')) {
+          newChat.remove();
+        }
+      });
+
+      // 点击对话项切换聊天内容
+      newChat.addEventListener('click', function() {
+        document.querySelectorAll('.chat-item').forEach(item => {
+          item.classList.remove('active', 'bg-gray-100');
+        });
+        this.classList.add('active', 'bg-gray-100');
+        // 清空聊天内容（模拟切换对话）
+        chatMessages.innerHTML = `
+                        <div class="text-center mb-6">
+                            <span class="bg-gray-200 text-gray-600 text-xs py-1 px-3 rounded-full">新对话</span>
+                        </div>
+                    `;
+      });
+
+      // 清空聊天内容（模拟切换到新对话）
+      chatMessages.innerHTML = `
+                    <div class="text-center mb-6">
+                        <span class="bg-gray-200 text-gray-600 text-xs py-1 px-3 rounded-full">新对话</span>
+                    </div>
+                `;
+    });
+
+    // 删除对话
+    deleteChatBtns.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const chatItem = this.closest('.chat-item');
+        if (confirm('确定要删除这个对话吗？')) {
+          chatItem.remove();
+        }
+      });
+    });
+
+    // 点击对话项切换聊天内容
+    document.querySelectorAll('.chat-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.chat-item').forEach(i => {
+          i.classList.remove('active', 'bg-gray-100');
+        });
+        this.classList.add('active', 'bg-gray-100');
+        // 这里可以根据对话ID加载不同的聊天记录
+      });
+    });
+
+    // 快捷提问
+    quickQuestions.forEach(question => {
+      question.addEventListener('click', function() {
+        const questionText = this.textContent.trim();
+        messageInput.value = questionText;
+        messageInput.style.height = 'auto';
+        messageInput.style.height = (messageInput.scrollHeight) + 'px';
+      });
+    });
+
+    // 发送消息
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message === '') return;
+
+      // 添加用户消息
+      const userMessageDiv = document.createElement('div');
+      userMessageDiv.className = 'flex mb-4';
+      userMessageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0 mr-3">
+                        <i class="fa fa-user text-gray-600"></i>
+                    </div>
+                    <div class="max-w-[70%] bg-white p-3 rounded-lg rounded-tl-none shadow-sm">
+                        <p>${message}</p>
+                    </div>
+                `;
+      chatMessages.appendChild(userMessageDiv);
+
+      // 清空输入框
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+
+      // 滚动到底部
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      // 模拟AI回复
+      setTimeout(() => {
+        const aiMessageDiv = document.createElement('div');
+        aiMessageDiv.className = 'flex mb-4 justify-end';
+        aiMessageDiv.innerHTML = `
+                        <div class="max-w-[70%] bg-primary text-white p-3 rounded-lg rounded-tr-none shadow-sm">
+                            <p>这是一条模拟的AI回复。在实际应用中，这里会连接到后端API获取真实的AI响应。</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ml-3">
+                            <i class="fa fa-robot"></i>
+                        </div>
+                    `;
+        chatMessages.appendChild(aiMessageDiv);
+
+        // 滚动到底部
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 1000);
+    }
+
+    // 点击发送按钮发送消息
+    sendBtn.addEventListener('click', sendMessage);
+
+    // 按Enter键发送消息，Shift+Enter换行
+    messageInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  });
+</script>
+</body>
+</html>
